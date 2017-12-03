@@ -157,5 +157,4 @@ def segmentation():
 	
 	image = cv2.resize(image,(width,height),interpolation=cv2.INTER_CUBIC)
 	cv2.imwrite("Output.jpg", image)
-	
-segmentation()
+	return labels, shifted_points, image, points, width, height
