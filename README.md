@@ -1,6 +1,6 @@
 # hair-segmentation-using-meanshift
 
-- mean_shift.py
+### mean_shift.py
 
 Implement the classical mean shift algorithm.
 
@@ -14,7 +14,7 @@ There are three main parameters in this algorithm: the converging threshold, the
 
 ![jcorso](result/jcorso.jpg)
 
-- extract_hair.py
+### extract_hair.py
 
 I use an experimental method to detect the initial hair point. I focus on the upper 1/3 part of the image, start from the right end side of the image and move left, when I detect a region that is different from the background, I assume it is a hair region. Then I select all the points which are in the same group with elements in this region.
 
@@ -23,3 +23,5 @@ I then iterate through every line of the points I get from hair and select one t
 ![hair](result/hair.jpg)
 
 ![points](result/points.PNG)
+
+(Picture showing my professor, Dr. Jason J. Corso @ UMICH)
