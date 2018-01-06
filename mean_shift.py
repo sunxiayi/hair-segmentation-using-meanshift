@@ -1,31 +1,34 @@
 import numpy as np
 import argparse
 import math
-import detect_head
 import sys
 import cv2
-from sklearn.cluster import estimate_bandwidth
 from collections import OrderedDict
 import pandas as pd
 import scipy.io as sio
 
 # global variables
-MIN_DISTANCE = 6
-GROUP_DISTANCE = 15
+MIN_DISTANCE = 5
+GROUP_DISTANCE = 10
 COLOR_POOL = [[1,50,200],[150,200,9],[255,0,0],[10,79,0],\
 			  [200,100,0],[25,38,0],[78,250,250],[158,143,120],[28,222,98],\
 			  [255,250,199],[100,150,100],[200,50,1],[250,250,78],[15,38,245],\
 			  [123,234,90]]
 
-def parse_arguments():
-	# construct the argument parser and parse the arguments
-	ap = argparse.ArgumentParser()
-	ap.add_argument("-p", "--shape-predictor", required=True,
-		help="path to facial landmark predictor")
-	ap.add_argument("-i", "--image", required=True,
-		help="path to input image")
-	args = vars(ap.parse_args())
-	return args
+
+def preprocess(args):
+	# load the input image, resize it, and convert it to grayscale
+	image = cv2.imread(args["image"])
+	original_height = int(image.shape[0])
+	original_width = int(image.shape[1])
+	image = cv2.resize(image,(50,50),interpolation=cv2.INTER_CUBIC)
+	all_points = []
+
+	for i in range(0, image.shape[0]):
+		for j in range(0, image.shape[1]):
+			all_points.append(np.array([i,j] + list(image[i,j]))) # revised
+
+	return image, all_points, original_width, original_height
 
 def euclidean_distance(x1, x2):
 	# weighted on the distance more
@@ -119,6 +122,7 @@ def mean_shift(points, kernel):
 		converged = True
 		for original_point in original_to_shifted:
 			cur_pos = original_to_shifted[original_point]
+			print(cur_pos)
 			if visited[tuple(cur_pos)]:
 				continue
 			neighbors = get_neighbors(points, cur_pos, kernel) # revise
@@ -139,22 +143,21 @@ def mean_shift(points, kernel):
 
 	return labels, grouped_points
 
-def segmentation():
-	args = parse_arguments()
-	image, points, width, height = detect_head.get_points(args)
+def segmentation(args):
+	image, points, width, height = preprocess(args)
 	labels, shifted_points = mean_shift(points, 15)
 
+	index = 0
 	# draw the result of the segmentation
-	for points in shifted_points:
-		if len(points) > 50:
-			for point in points:
+	for pts in shifted_points:
+		if len(pts) > 50:
+			for point in pts:
 				x = point[1]
 				y = point[0]
-				print(index)
 				color = COLOR_POOL[index][::-1]
 				cv2.circle(image, (x, y), 1, color, -1)
 			index += 1
 	
-	image = cv2.resize(image,(width,height),interpolation=cv2.INTER_CUBIC)
-	cv2.imwrite("Output.jpg", image)
+	image_resized = cv2.resize(image,(width,height),interpolation=cv2.INTER_CUBIC)
+	cv2.imwrite("Segmentation.jpg", image_resized)
 	return labels, shifted_points, image, points, width, height
